@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Device Isolation - speedx-network</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Device Isolation";
+        var mkdocs_page_input_path = "posts/device-isolation.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../index.html" class="icon icon-home"> speedx-network
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../about.html">About</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Posts</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Device Isolation</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#igp-based-isolation">IGP-Based Isolation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#bgp-based-isolation">BGP-Based Isolation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#use-cases">Use Cases</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">speedx-network</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html" class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Posts</li>
+      <li class="breadcrumb-item active">Device Isolation</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="network-device-isolation">Network Device Isolation</h1>
+<p>Network device needs to be isolated in operations for maintenance , hardware or software upgrades. Most of network devices uses  dynamic routing with IGP (OSPF / IS-IS) and BGP protocol. Multiple Vendors provide simple commands to isolate network device gracefully.</p>
+<h2 id="igp-based-isolation">IGP-Based Isolation</h2>
+<p>IGPs such as OSPF, IS-IS,operate within an autonomous system (AS). Device isolation can be achieved by:</p>
+<ul>
+<li><strong>Max-metric:</strong> Advertise higher metrics on all interfaces to make the device less preferred for transit traffic; command syntax may differ by vendor.</li>
+<li><strong>Overload Bit (IS-IS):</strong> Set the overload bit to signal other routers to avoid using this device for transit traffic.</li>
+<li><strong>Route Filters:</strong> Apply filters at area boundaries to control which prefixes are advertised.</li>
+</ul>
+<p><strong>Example (OSPF):</strong></p>
+<pre><code class="language-shell">router ospf ABC
+ max-metric 
+</code></pre>
+<p><strong>Example (ISIS):</strong></p>
+<pre><code class="language-shell">router isis ABC
+ set-overload-bit 
+</code></pre>
+<h2 id="bgp-based-isolation">BGP-Based Isolation</h2>
+<p>BGP is used for inter-AS routing and provides advanced isolation mechanisms:</p>
+<ul>
+<li><strong>Graceful-maintenance:</strong> Limit route visibility between devices or groups.</li>
+<li><strong>Graceful-shutdown:</strong> Control which routes are advertised or accepted between peers.</li>
+<li><strong>Communities and Policies:</strong> Tag routes for selective propagation or restriction.</li>
+</ul>
+<p><strong>Example (BGP Prefix Filtering):</strong></p>
+<pre><code class="language-shell">ip prefix-list BLOCKED seq 5 deny 192.168.100.0/24
+ip prefix-list BLOCKED seq 10 permit 0.0.0.0/0 le 32
+
+router bgp 65001
+ neighbor 10.1.1.2 prefix-list BLOCKED out
+</code></pre>
+<h2 id="use-cases">Use Cases</h2>
+<ul>
+<li><strong>Multi-Tenant Networks:</strong> Isolate customer devices using VRFs and route policies.</li>
+<li><strong>Security Zones:</strong> Restrict communication between sensitive and general-purpose devices.</li>
+<li><strong>Testing Environments:</strong> Prevent test devices from affecting production traffic.</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>Combining IGP and BGP techniques enables robust device isolation, enhancing security and network manageability. Proper configuration of areas, route filters, and policies is critical for effective isolation.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../about.html" class="btn btn-neutral float-left" title="About"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../about.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
